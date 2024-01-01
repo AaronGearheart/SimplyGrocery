@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gearheart Studios - Grocery Finder</title>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+          // Get the value of the 'code' parameter from the URL
+          const urlParams = new URLSearchParams(window.location.search);
+          const code = urlParams.get('code');
+  
+          // Use the 'code' value as needed
+          console.log('Code:', code);
+      });
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
+        
+        /*
+        background #fff
+        accent-1 #f06707 - Orange
+        accent-2 #e60d68 - Magenta
+        accent-3 #05aeff - Blue
+        gradient linear-gradient(48.07deg,#05aeff 0%,#e60d68 67.31%,#f06707 100%)
+        */
+
+        html, body{
+            margin: 0;
+            width: 100%;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        *{
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .locationBtn, .getLocationBtn{
+            margin: .5em;
+            background: linear-gradient(228.07deg,#05aeff 0%,#e60d68 67.31%,#f06707 100%);
+            height: 10%;
+            width: 85%;
+            border-radius: .5em;
+            border: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bolder;
+            color: white;
+        }
+        .runBtn{
+            margin-top: 1rem;
+            background: linear-gradient(228.07deg,#05aeff 0%,#e60d68 67.31%,#f06707 100%);
+            height: 10%;
+            width: 85%;
+            border-radius: .5em;
+            border: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .runLink{
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bolder;
+            color: white;
+        }
+        #credits{
+            margin: 0px;
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+            background: linear-gradient(48.07deg,#05aeff 0%,#e60d68 67.31%,#f06707 100%);
+            padding: 0em 1em;
+            border-radius: 5px;
+            color: white;
+            background-clip: padding-box;
+        }
+        #credits a{
+            font-weight: bolder;
+        }
+        #credits-text{
+            color: white;
+            margin: 0;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1em;
+            text-decoration: none;
+        }
+        #locationBtnGrid{
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        #terminal{
+          width: 80%;
+          font-size: 1.5rem;
+          text-decoration: none;
+          font-weight: bolder;
+          color: black;
+          margin-bottom: 1em;
+          padding: 0;
+        }
+        pre{
+          white-space: pre-wrap;
+        }
+        #manualZip{
+          box-sizing: border-box;
+          background-color: white;
+          border: 3px solid;
+          border-image: linear-gradient(48.07deg, #05aeff 0%, #e60d68 67.31%, #f06707 100%);
+          border-image-slice: 1;
+          padding: 10px;
+          font-family: 'Quicksand', sans-serif;
+          color: black;
+          font-size: 1em;
+          text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <center>
+        <h1>Choose Location</h1>
+        <div id="locationBtnGrid">
+            <button id="locationBtn" class="locationBtn" data-location="03500493">500 W University Dr</button>   
+            <button id="locationBtn" class="locationBtn" data-location="03500586">1592 S Loop 288</button>
+            <button id="locationBtn" class="locationBtn" data-location="03500570">5021 Teasley Ln</button>
+        </div>
+        <button id="getLocationBtn" class="getLocationBtn">Get More Locations</button>
+        <input type="text" id="manualZip" placeholder="(OPTIONAL) ZIPCODE" pattern="[0-9]*" inputmode="numeric" maxlength="5">
+
+        <script>
+          document.getElementById('getLocationBtn').addEventListener('click', getLocation);
+          
+          document.getElementById('manualZip').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, ''); // Remove non-numeric characters
+          });
+
+          function getLocation() {
+            const manualZipInput = document.getElementById('manualZip');
+            const manualZip = manualZipInput.value.trim();
+        
+            if (manualZip.length === 5) {
+              // Use manually entered zip code
+              getLocationData(manualZip);
+            } else if (navigator.geolocation) {
+              // Use geolocation if available
+              navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+              console.log("Geolocation is not supported by this browser.");
+              alert("Geolocation is not supported by this browser.")
+            }
+          }
+          
+          function getLocationData(postcode) {
+            // Log a message indicating the attempt to retrieve data with the specified postcode
+            console.log(`Attempting to retrieve data with postcode: ${postcode}`);
+          
+            // Make the POST request to the PHP script
+            fetch('php/getLocation.php', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: 'zipcode=' + encodeURIComponent(postcode)
+            })
+            .then(response => response.text())
+            .then(data => {
+              // Log the received data to the console
+              console.log(data);
+          
+              // Split the data into lines
+              const lines = data.split('\n');
+          
+              // Clear existing buttons in #locationBtnGrid
+              const locationBtnGrid = document.getElementById('locationBtnGrid');
+              locationBtnGrid.innerHTML = '';
+          
+              // Generate buttons for each location, excluding the last line
+              for (let i = 0; i < lines.length - 1; i++) {
+                // Split the location data into ID and address
+                const [locationId, address] = lines[i].split(', ');
+          
+                // Create a new button element
+                const button = document.createElement('button');
+                button.classList.add('locationBtn');
+                button.setAttribute('id', 'locationBtn'); // Set the ID to 'locationBtn'
+                button.setAttribute('data-location', locationId);
+                button.textContent = address;
+          
+                // Append the button to #locationBtnGrid
+                locationBtnGrid.appendChild(button);
+              }
+
+              // Display the message in the output element
+              document.getElementById('output').textContent = `Locations retrieved using zipcode ${postcode}`;
+
+            })
+            .catch(error => {
+              console.error('Error fetching location data:', error);
+            });
+          }
+          
+          function showPosition(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+          
+            // Make a request to Nominatim API
+            const apiUrl = `https://nominatim.openstreetmap.org/reverse?format=geojson&lat=${latitude}&lon=${longitude}`;
+          
+            fetch(apiUrl)
+              .then(response => response.json())
+              .then(data => {
+                const postcode = data.features[0].properties.address.postcode;
+                console.log('Postcode:', postcode);
+          
+                // Call the function to handle the POST request with the obtained postcode
+                getLocationData(postcode);
+              })
+              .catch(error => {
+                console.error('Error fetching geolocation data:', error);
+              });
+          }
+          </script>
+          
+      
+        <h1>Run Script</h1>
+        <div id="runScript" class="runBtn">
+            <a href="#" id="runScript" class="runLink">Run Script</a>
+        </div>
+        
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+              // Get the element by its class name
+              var runBtn = document.querySelector('.runBtn');
+  
+              // Add a click event listener to the div
+              runBtn.addEventListener('click', function() {
+                  // Reference to the link element
+                  var runLink = document.querySelector('.runLink');
+  
+                  // Make the POST request to the PHP script
+                  fetch('php/runScript.php', {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({}) // You can add data here if required
+                  })
+                  .then(response => response.text()) // Assuming you expect text response
+                  .then(data => {
+                      // Display the response data in the terminal
+                      document.getElementById('output').textContent = data;
+  
+                      // Change back to "Run Script" after a delay (e.g., 2000 milliseconds)
+                      setTimeout(function() {
+                          runLink.textContent = 'Run Script';
+                      }, 2000);
+                  })
+                  .catch(error => {
+                      // Handle errors here
+                      console.error('Error:', error);
+                      document.getElementById('output').textContent = 'Error occurred.';
+                  });
+  
+                  // Update the text content of the link to indicate it's running
+                  runLink.textContent = 'Script Running';
+              });
+          });
+        </script>
+
+        <h2>Script Output</h2>
+        <div id="terminal">
+            <pre id="output">No output yet...</pre>
+        </div>
+    </center>
+    <div id="credits">
+        <p id="credits-text">
+          Powered by <a href="https://gearheartstudios.com" id="credits-text">Gearheart Studios</a>
+        </p>
+    </div>
+    <script>
+    
+      // Add a click event listener to each location button
+      // Assuming locationBtnGrid is the parent element that contains all the buttons
+      const locationBtnGrid = document.getElementById('locationBtnGrid');
+    
+      locationBtnGrid.addEventListener('click', function(event) {
+        if (event.target.classList.contains('locationBtn')) {
+          // Get the data-location attribute value from the clicked button
+          const locationId = event.target.getAttribute('data-location');
+          console.log(locationId);
+    
+          // Make the POST request to the PHP script
+          fetch('php/changeLocation.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ locationId: locationId }) // Send the locationId to PHP
+          })
+          .then(response => response.text()) // Assuming you expect text response
+          .then(data => {
+            // Display the response data in the terminal
+            document.getElementById('output').textContent = data;
+          })
+          .catch(error => {
+            // Handle errors here
+            console.error('Error:', error);
+            document.getElementById('output').textContent = 'Error occurred.';
+          });
+        }
+      });
+    </script>    
+</body>
+</html>
