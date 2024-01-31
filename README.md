@@ -1,3 +1,7 @@
+*** THIS IS NO LONGER DEVELOPED *** <br>
+This code is here for viewing but is no longer going to be updated because it is being made into a product.
+
+ 
  # TrelloToKrogerAisle
 A Python script to grab cards from a Trello grocery list, check your local Kroger location for stock, and then re-upload the cards with aisle numbers sorted ascending
 
